@@ -1,0 +1,81 @@
+# Rust build artifacts
+/target/
+/debug/
+/release/
+*.rs.bk
+*.rlib
+*.prof*
+
+# Cargo
+Cargo.lock
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files
+.env*
+!.env.example
+
+# Qi compiler specific
+*.qi.d
+*.qi.o
+*.qi.bc
+*.ll
+*.s
+
+# Runtime library build artifacts
+runtime/build/
+runtime/bin/
+runtime/lib/
+runtime/*.so
+runtime/*.dylib
+runtime*.dll
+
+# Test coverage
+coverage/
+tarpaulin-report.html
+
+# Benchmark results
+benchmarks/results/
+*.benchmark
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# CMake build files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Documentation build
+docs/target/
+book/
+
+# Performance profiling
+perf.data*
+*.profraw
+*.profdata
+
+# Clippy
+clippy.toml
+
+# Rustfmt
+rustfmt.toml
+
+# LLVM intermediate files
+*.bc
+*.ll

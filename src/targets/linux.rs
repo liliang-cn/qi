@@ -1,0 +1,49 @@
+//! Linux target implementation
+
+use super::{Target, TargetError};
+
+/// Linux target implementation
+pub struct LinuxTarget {
+    target_triple: String,
+    cpu_features: Vec<&'static str>,
+    linker_flags: Vec<&'static str>,
+}
+
+impl LinuxTarget {
+    pub fn new() -> Self {
+        Self {
+            target_triple: "x86_64-unknown-linux-gnu".to_string(),
+            cpu_features: vec![
+                "sse2", "sse4.1", "sse4.2", "avx", "avx2"
+            ],
+            linker_flags: vec![
+                "-no-pie", "-dynamic-linker", "/lib64/ld-linux-x86-64.so.2"
+            ],
+        }
+    }
+}
+
+impl Target for LinuxTarget {
+    fn target_triple(&self) -> &str {
+        &self.target_triple
+    }
+
+    fn cpu_features(&self) -> &[&str] {
+        &self.cpu_features
+    }
+
+    fn linker_flags(&self) -> &[&str] {
+        &self.linker_flags
+    }
+
+    fn generate_runtime(&self) -> Result<String, TargetError> {
+        // TODO: Generate Linux-specific runtime code
+        Ok("// Linux runtime code placeholder".to_string())
+    }
+}
+
+impl Default for LinuxTarget {
+    fn default() -> Self {
+        Self::new()
+    }
+}

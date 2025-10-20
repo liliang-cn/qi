@@ -1,0 +1,112 @@
+# Pre-commit hooks for Qi Compiler
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        description: Trim trailing whitespace
+      - id: end-of-file-fixer
+        description: Ensure files end with newline
+      - id: check-yaml
+        description: Check YAML syntax
+      - id: check-json
+        description: Check JSON syntax
+      - id: check-toml
+        description: Check TOML syntax
+      - id: check-merge-conflict
+        description: Check for merge conflict markers
+      - id: check-added-large-files
+        description: Prevent large files from being added
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+        description: Check for case conflicts
+      - id: check-executables-have-shebangs
+        description: Check that executables have shebangs
+      - id: mixed-line-ending
+        description: Ensure consistent line endings
+      - id: requirements-txt-fixer
+        description: Fix requirements.txt formatting
+
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+        description: Format Rust code with rustfmt
+        args: [--all, --verbose]
+      - id: cargo-check
+        description: Check Rust code with cargo check
+        args: [--all-targets, --all-features]
+      - id: clippy
+        description: Lint Rust code with clippy
+        args: [--all-targets, --all-features, --, -D, warnings]
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.16.26
+    hooks:
+      - id: typos
+        description: Check for typos
+        exclude: 'src/lexer/keywords\.rs$|tests/.*\.qi$'
+
+  - repo: local
+    hooks:
+      - id: cargo-test
+        name: cargo test
+        entry: cargo test
+        language: system
+        description: Run cargo test
+        pass_filenames: false
+        always_run: true
+
+      - id: check-chinese-keywords
+        name: Check Chinese keyword consistency
+        entry: bash -c 'grep -r "如果\|否则\|循环\|当\|对于\|函数\|返回\|变量\|常量\|整数\|字符串\|布尔\|浮点数" src/ --include="*.rs" && echo "Chinese keywords found"'
+        language: system
+        description: Verify Chinese keywords are present in source
+        pass_filenames: false
+        always_run: false
+
+      - id: validate-grammar
+        name: Validate LALRPOP grammar
+        entry: bash -c 'for file in src/parser/*.lalrpop; do if [ -f "$file" ]; then echo "Validating $file" && lalrpop "$file"; fi; done'
+        language: system
+        description: Validate LALRPOP grammar files
+        pass_filenames: false
+        always_run: false
+
+# Configuration
+default_language_version:
+  python: python3
+
+# Skip patterns for certain files
+exclude: |
+  (?x)^(
+    target/.*|
+    runtime/build/.*|
+    \.git/.*|
+    \.cargo/.*|
+    Cargo\.lock|
+    .*\.ll$|
+    .*\.bc$|
+    .*\.s$|
+    .*\.o$|
+    .*\.so$|
+    .*\.dylib$|
+    .*\.dll$|
+    CMakeCache\.txt|
+    CMakeFiles/.*|
+    cmake_install\.cmake|
+    Makefile$
+  )$
+
+# CI configuration
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

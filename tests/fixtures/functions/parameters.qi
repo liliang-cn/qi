@@ -1,0 +1,47 @@
+// Function parameter test fixtures for Qi Language Compiler
+// This file tests function definitions with various parameter types
+
+// Function with no parameters (already supported)
+函数 empty_function() {
+    返回 42;
+}
+
+// Function with single integer parameter
+函数 add_one(x: 整数) {
+    返回 x + 1;
+}
+
+// Function with multiple parameters
+函数 calculate(a: 整数, b: 整数, operation: 字符串) {
+    如果 operation == "add" {
+        返回 a + b;
+    } 否则 {
+        返回 a * b;
+    }
+}
+
+// Function with different type parameters
+函数 mixed_types(num: 整数, text: 字符串, flag: 布尔, char: 字符) {
+    变量 result = num;
+    返回 result;
+}
+
+// Function with Chinese identifiers and types
+函数 计算总和(数字1: 整数, 数字2: 整数) {
+    返回 数字1 + 数字2;
+}
+
+// Function call tests
+变量 test1 = add_one(5);
+变量 test2 = calculate(10, 20, "add");
+变量 test3 = mixed_types(100, "hello", 真, 'A');
+变量 test4 = 计算总和(15, 25);
+
+// Function that calls other functions
+函数 complex_calc(x: 整数, y: 整数) {
+    变量 sum = 计算总和(x, y);
+    变量 doubled = add_one(sum);
+    返回 doubled;
+}
+
+变量 final_result = complex_calc(3, 7);

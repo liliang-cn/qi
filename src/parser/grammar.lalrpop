@@ -1,0 +1,311 @@
+use crate::parser::ast::*;
+
+grammar;
+
+pub Program: Program = {
+    <statements:Statement*> => Program {
+        package_name: None,
+        imports: vec![],
+        statements,
+        source_span: Default::default(),
+    }
+};
+
+Statement: AstNode = {
+    VariableDeclaration,
+    FunctionDeclaration,
+    ReturnStatement,
+    IfStatement,
+    WhileStatement,
+    ForStatement,
+    <e:Expr> ";" => AstNode::表达式语句(ExpressionStatement {
+        expression: Box::new(e),
+        span: Default::default(),
+    }),
+};
+
+VariableDeclaration: AstNode = {
+    "变量" <name:Identifier> "=" <value:Expr> ";" => AstNode::变量声明(VariableDeclaration {
+        name,
+        type_annotation: None,
+        initializer: Some(Box::new(value)),
+        is_mutable: true,
+        span: Default::default(),
+    }),
+    "常量" <name:Identifier> "=" <value:Expr> ";" => AstNode::变量声明(VariableDeclaration {
+        name,
+        type_annotation: None,
+        initializer: Some(Box::new(value)),
+        is_mutable: false,
+        span: Default::default(),
+    }),
+};
+
+FunctionDeclaration: AstNode = {
+    "函数" <name:Identifier> "(" ")" "{" <body:Statement*> "}" => AstNode::函数声明(FunctionDeclaration {
+        name,
+        parameters: vec![],
+        return_type: None,
+        body,
+        span: Default::default(),
+    }),
+    "函数" <name:Identifier> "(" <params:ParameterList> ")" "{" <body:Statement*> "}" => AstNode::函数声明(FunctionDeclaration {
+        name,
+        parameters: params,
+        return_type: None,
+        body,
+        span: Default::default(),
+    }),
+};
+
+ReturnStatement: AstNode = {
+    "返回" <value:Expr> ";" => AstNode::返回语句(ReturnStatement {
+        value: Some(Box::new(value)),
+        span: Default::default(),
+    }),
+    "返回" ";" => AstNode::返回语句(ReturnStatement {
+        value: None,
+        span: Default::default(),
+    }),
+};
+
+IfStatement: AstNode = {
+    "如果" <condition:Expr> "{" <then_branch:Statement*> "}" => AstNode::如果语句(IfStatement {
+        condition: Box::new(condition),
+        then_branch,
+        else_branch: None,
+        span: Default::default(),
+    }),
+    "如果" <condition:Expr> "{" <then_branch:Statement*> "}" "否则" "{" <else_branch:Statement*> "}" => AstNode::如果语句(IfStatement {
+        condition: Box::new(condition),
+        then_branch,
+        else_branch: Some(else_branch),
+        span: Default::default(),
+    }),
+};
+
+WhileStatement: AstNode = {
+    "当" <condition:Expr> "{" <body:Statement*> "}" => AstNode::当语句(WhileStatement {
+        condition: Box::new(condition),
+        body,
+        span: Default::default(),
+    }),
+};
+
+ForStatement: AstNode = {
+    "对于" <variable:Identifier> "在" <range:Expr> "{" <body:Statement*> "}" => AstNode::对于语句(ForStatement {
+        variable,
+        range: Box::new(range),
+        body,
+        span: Default::default(),
+    }),
+};
+
+// Expression precedence from lowest to highest
+Expr: AstNode = {
+    <left:Expr> "=" <right:Term> => AstNode::赋值表达式(AssignmentExpression {
+        target: match left {
+            AstNode::标识符表达式(ident) => ident.name,
+            _ => "unknown".to_string(),
+        },
+        value: Box::new(right),
+        span: Default::default(),
+    }),
+    Term,
+};
+
+Term: AstNode = {
+    <left:Term> "==" <right:Factor> => AstNode::二元操作表达式(BinaryExpression {
+        left: Box::new(left),
+        operator: BinaryOperator::等于,
+        right: Box::new(right),
+        span: Default::default(),
+    }),
+    <left:Term> "!=" <right:Factor> => AstNode::二元操作表达式(BinaryExpression {
+        left: Box::new(left),
+        operator: BinaryOperator::不等于,
+        right: Box::new(right),
+        span: Default::default(),
+    }),
+    <left:Term> ">" <right:Factor> => AstNode::二元操作表达式(BinaryExpression {
+        left: Box::new(left),
+        operator: BinaryOperator::大于,
+        right: Box::new(right),
+        span: Default::default(),
+    }),
+    <left:Term> ">=" <right:Factor> => AstNode::二元操作表达式(BinaryExpression {
+        left: Box::new(left),
+        operator: BinaryOperator::大于等于,
+        right: Box::new(right),
+        span: Default::default(),
+    }),
+    <left:Term> "<" <right:Factor> => AstNode::二元操作表达式(BinaryExpression {
+        left: Box::new(left),
+        operator: BinaryOperator::小于,
+        right: Box::new(right),
+        span: Default::default(),
+    }),
+    <left:Term> "<=" <right:Factor> => AstNode::二元操作表达式(BinaryExpression {
+        left: Box::new(left),
+        operator: BinaryOperator::小于等于,
+        right: Box::new(right),
+        span: Default::default(),
+    }),
+    Factor,
+};
+
+Factor: AstNode = {
+    <left:Factor> "+" <right:Primary> => AstNode::二元操作表达式(BinaryExpression {
+        left: Box::new(left),
+        operator: BinaryOperator::加,
+        right: Box::new(right),
+        span: Default::default(),
+    }),
+    <left:Factor> "-" <right:Primary> => AstNode::二元操作表达式(BinaryExpression {
+        left: Box::new(left),
+        operator: BinaryOperator::减,
+        right: Box::new(right),
+        span: Default::default(),
+    }),
+    Primary,
+};
+
+Primary: AstNode = {
+    <left:Primary> "*" <right:Atom> => AstNode::二元操作表达式(BinaryExpression {
+        left: Box::new(left),
+        operator: BinaryOperator::乘,
+        right: Box::new(right),
+        span: Default::default(),
+    }),
+    Atom,
+};
+
+Atom: AstNode = {
+    BooleanLiteral,
+    IntegerLiteral,
+    FloatLiteral,
+    StringLiteral,
+    CharLiteral,
+    ArrayLiteral,
+    IdentifierExpression,
+    FunctionCall,
+    ArrayAccessExpression,
+    "(" <Expr> ")",
+};
+
+FunctionCall: AstNode = {
+    <callee:IdentifierExpression> "(" ")" => AstNode::函数调用表达式(FunctionCallExpression {
+        callee: match callee {
+            AstNode::标识符表达式(ident) => ident.name,
+            _ => "unknown".to_string(),
+        },
+        arguments: vec![],
+        span: Default::default(),
+    }),
+};
+
+ArrayAccessExpression: AstNode = {
+    <array:IdentifierExpression> "[" <index:Expr> "]" => AstNode::数组访问表达式(ArrayAccessExpression {
+        array: Box::new(array),
+        index: Box::new(index),
+        span: Default::default(),
+    }),
+};
+
+BooleanLiteral: AstNode = {
+    "真" => AstNode::字面量表达式(LiteralExpression {
+        value: LiteralValue::布尔(true),
+        span: Default::default(),
+    }),
+    "假" => AstNode::字面量表达式(LiteralExpression {
+        value: LiteralValue::布尔(false),
+        span: Default::default(),
+    }),
+};
+
+IntegerLiteral: AstNode = {
+    <n:r"[0-9]+"> => AstNode::字面量表达式(LiteralExpression {
+        value: LiteralValue::整数(n.parse().unwrap()),
+        span: Default::default(),
+    }),
+};
+
+FloatLiteral: AstNode = {
+    <n:r"[0-9]+\.[0-9]+"> => AstNode::字面量表达式(LiteralExpression {
+        value: LiteralValue::浮点数(n.parse().unwrap()),
+        span: Default::default(),
+    }),
+};
+
+StringLiteral: AstNode = {
+    <s:r#""[^"]*""#> => AstNode::字面量表达式(LiteralExpression {
+        value: LiteralValue::字符串(s[1..s.len()-1].to_string()),
+        span: Default::default(),
+    }),
+};
+
+CharLiteral: AstNode = {
+    <c:r"'.'"> => AstNode::字面量表达式(LiteralExpression {
+        value: LiteralValue::字符(c.chars().nth(1).unwrap()),
+        span: Default::default(),
+    }),
+};
+
+ArrayLiteral: AstNode = {
+    "[" <elements:ExprList> "]" => AstNode::数组字面量表达式(ArrayLiteralExpression {
+        elements,
+        span: Default::default(),
+    }),
+    "[" "]" => AstNode::数组字面量表达式(ArrayLiteralExpression {
+        elements: vec![],
+        span: Default::default(),
+    }),
+};
+
+ExprList: Vec<AstNode> = {
+    <first:Expr> => vec![first],
+    <first:Expr> "," <rest:ExprList> => {
+        let mut rest = rest;
+        rest.insert(0, first);
+        rest
+    },
+};
+
+ParameterList: Vec<Parameter> = {
+    <first:Identifier> => vec![Parameter {
+        name: first,
+        type_annotation: None,
+        span: Default::default(),
+    }],
+    <first:Identifier> "," <rest:ParameterList> => {
+        let mut rest = rest;
+        rest.insert(0, Parameter {
+            name: first,
+            type_annotation: None,
+            span: Default::default(),
+        });
+        rest
+    },
+};
+
+// Regular identifiers (not keywords)
+Identifier: String = {
+    <id:r"[a-zA-Z_][a-zA-Z0-9_]*"> => id.to_string(),
+    // Match Chinese identifiers (Unicode characters outside ASCII range)
+    <id:r"[\u4e00-\u9fff][\u4e00-\u9fff0-9_]*"> => {
+        // Filter out Chinese keywords but allow other Chinese identifiers
+        match id {
+            "变量" | "常量" | "函数" | "返回" | "如果" | "否则" | "当" | "对于" | "真" | "假" =>
+                panic!("Keyword used as identifier: {}", id),
+            _ => id.to_string(),
+        }
+    },
+};
+
+IdentifierExpression: AstNode = {
+    <name:Identifier> => AstNode::标识符表达式(IdentifierExpression {
+        name,
+        span: Default::default(),
+    }),
+};
+

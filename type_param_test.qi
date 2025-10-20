@@ -1,0 +1,5 @@
+函数 test_bool(flag: 布尔) {
+    返回 1;
+}
+
+变量 result = test_bool(真);

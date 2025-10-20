@@ -88,6 +88,7 @@ impl TypeChecker {
             AstNode::程序(program) => self.check_program(program),
             AstNode::结构体声明(struct_decl) => self.check_struct_declaration(struct_decl),
             AstNode::枚举声明(enum_decl) => self.check_enum_declaration(enum_decl),
+            AstNode::打印语句(print_stmt) => self.check_print_statement(print_stmt),
             AstNode::循环语句(loop_stmt) => self.check_loop_statement(loop_stmt),
         }
     }
@@ -667,6 +668,14 @@ impl TypeChecker {
     fn check_expression_statement(&mut self, expr_stmt: &crate::parser::ast::ExpressionStatement) -> Result<TypeNode, TypeError> {
         // Type check the expression
         self.check(&expr_stmt.expression)
+    }
+
+    fn check_print_statement(&mut self, print_stmt: &crate::parser::ast::PrintStatement) -> Result<TypeNode, TypeError> {
+        // Type check the expression to be printed
+        self.check(&print_stmt.value)?;
+
+        // Print statement doesn't produce a value
+        Ok(TypeNode::基础类型(BasicType::空))
     }
 
     fn check_program(&mut self, program: &crate::parser::ast::Program) -> Result<TypeNode, TypeError> {

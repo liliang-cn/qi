@@ -15,6 +15,7 @@ Statement: AstNode = {
     VariableDeclaration,
     FunctionDeclaration,
     ReturnStatement,
+    PrintStatement,
     IfStatement,
     WhileStatement,
     ForStatement,
@@ -65,6 +66,13 @@ ReturnStatement: AstNode = {
     }),
     "返回" ";" => AstNode::返回语句(ReturnStatement {
         value: None,
+        span: Default::default(),
+    }),
+};
+
+PrintStatement: AstNode = {
+    "打印" <value:Expr> ";" => AstNode::打印语句(PrintStatement {
+        value: Box::new(value),
         span: Default::default(),
     }),
 };

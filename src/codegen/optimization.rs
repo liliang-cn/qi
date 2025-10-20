@@ -134,6 +134,14 @@ impl OptimizationManager {
                 continue;
             }
 
+            // 始终保留函数闭合大括号，以避免在 ret 之后被误删
+            if trimmed == "}" {
+                optimized_lines.push(line);
+                // 复位标记，确保函数外不再视为不可达
+                in_unreachable_block = false;
+                continue;
+            }
+
             // 检测函数定义的开始
             if trimmed.starts_with("define ") {
                 in_unreachable_block = false;

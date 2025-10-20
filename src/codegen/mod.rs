@@ -128,5 +128,8 @@ mod tests {
         assert!(ir.contains("define"));
         assert!(ir.contains("@test"));
         assert!(ir.contains("ret i64 42"));
+        // Regression: ensure closing brace is present (allow optional trailing newline)
+        let ir_trimmed = ir.trim_end();
+        assert!(ir_trimmed.ends_with('}'), "Generated IR should end with a closing brace '}}' for function end");
     }
 }

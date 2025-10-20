@@ -19,6 +19,7 @@ pub enum AstNode {
     对于语句(ForStatement),
     C风格对于语句(CStyleForStatement),
     返回语句(ReturnStatement),
+    打印语句(PrintStatement),
     表达式语句(ExpressionStatement),
 
     // Expressions
@@ -126,6 +127,13 @@ pub struct CStyleForStatement {
 #[derive(Debug, Clone)]
 pub struct ReturnStatement {
     pub value: Option<Box<AstNode>>,
+    pub span: Span,
+}
+
+/// Print statement
+#[derive(Debug, Clone)]
+pub struct PrintStatement {
+    pub value: Box<AstNode>,
     pub span: Span,
 }
 

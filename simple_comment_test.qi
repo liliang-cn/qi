@@ -1,0 +1,5 @@
+// Line comment test
+变量 a = 10;
+
+/* Block comment test */
+变量 b = 20;
